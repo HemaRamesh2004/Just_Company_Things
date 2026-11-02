@@ -1,0 +1,672 @@
+# Presentation Script
+## Can Decision Models Understand Stance? Evaluating Jev Against General-Purpose LLMs
+
+### Slide 1 – Introduction
+
+Good morning everyone.
+
+Today, I am going to present a research paper titled **“Can Decision Models Understand Stance? Evaluating Jev Against General-Purpose LLMs.”**
+
+This paper was published on October 8, 2026, by Xing Li and the co-authors.
+
+The research focuses on an important Natural Language Processing task called **stance detection**.
+
+It explores whether a decision model like Jev can identify people's opinions and positions toward a particular target, and how its performance compares with general-purpose Large Language Models.
+
+Before looking into the proposed approach, let us first understand what stance detection means.
+
+---
+
+### Slide 2 – What Is Stance Detection?
+
+Stance detection is an NLP task that identifies a person's position or opinion toward a specific target.
+
+The target can be a person, organization, product, topic, or claim.
+
+The system generally classifies the stance into three categories:
+
+- **Favor:** The person supports or agrees with the target.
+- **Against:** The person opposes or disagrees with the target.
+- **Neutral:** The person does not clearly support or oppose the target.
+
+For example, consider the target: *Online education is beneficial.*
+
+If someone says, "Online education provides flexible learning opportunities," the stance is Favor.
+
+If someone says, "Online education reduces direct interaction between students and teachers," the stance may be Against.
+
+If someone simply says, "Online education is becoming popular," the stance may be Neutral.
+
+So, the main objective is not just to understand what a sentence says, but to identify the speaker's position toward a particular target.
+
+---
+
+### Slide 3 – Challenges in Stance Detection
+
+Although stance detection sounds simple, identifying someone's actual position is challenging.
+
+There are four major challenges.
+
+**First – Target dependency.**
+
+The same sentence can express different stances depending on the target.
+
+For example, "This policy creates more opportunities."
+
+If the target is employment development, the stance may be Favor.
+
+But if the target is government spending, the same sentence may not express support.
+
+**Second – Implicit opinions.**
+
+People do not always express their opinions directly.
+
+They may use indirect statements, sarcasm, or context-dependent expressions.
+
+**Third – Conversational context.**
+
+In conversations, a person's actual position may depend on what other people said earlier.
+
+A single reply may not contain enough information to understand the stance.
+
+**Fourth – Unseen targets.**
+
+A model may perform well on topics it has already encountered, but identifying opinions toward completely new targets is more difficult.
+
+These challenges motivate the need for better and more flexible stance detection approaches.
+
+---
+
+### Slide 4 – Research Motivation and Objective
+
+The main motivation behind this research is to evaluate whether decision-oriented models can perform stance detection effectively.
+
+Traditional approaches often depend on task-specific training data and predefined target information.
+
+However, Large Language Models can understand natural-language instructions and perform different tasks without necessarily requiring task-specific training.
+
+The researchers therefore investigate Jev, a decision model, and compare it with general-purpose LLMs.
+
+The main objectives are:
+
+1. To evaluate Jev on individual-text stance detection.
+2. To evaluate Jev on conversational stance detection.
+3. To compare its performance with different general-purpose LLMs.
+4. To analyse its prediction quality, limitations, token usage, and API cost.
+
+In simple terms, the research asks:
+
+**Can a decision model understand people's opinions as effectively as general-purpose language models?**
+
+---
+
+### Slide 5 – Related Work: Stance Detection
+
+Before introducing Jev, let us look at some existing approaches in stance detection.
+
+Research in this area has explored different methods.
+
+**Target-specific approaches** identify the stance of a text toward a particular target.
+
+**Cross-target approaches** attempt to transfer knowledge learned from one target to another target.
+
+**Zero-shot approaches** identify stances toward unseen targets without requiring target-specific training examples.
+
+**LLM-based approaches** use natural-language instructions to perform stance classification.
+
+For example, a model may learn to identify opinions about electric vehicles and then be evaluated on a new target, such as hydrogen vehicles.
+
+These approaches help improve the flexibility of stance detection.
+
+However, most of them focus on individual text.
+
+This leads us to another important research area: conversational stance detection.
+
+---
+
+### Slide 6 – Related Work: Conversational Stance Detection
+
+Conversational Stance Detection, or CSD, focuses on identifying a person's stance within a conversation.
+
+Unlike individual-text classification, it considers the relationship between multiple speakers and their previous statements.
+
+Some important related works include:
+
+**SRQ:** This work studies stance in replies and quoted tweets, where the relationship between the original content and the response is important.
+
+**MT-CSD:** This focuses on modelling dependencies across multiple turns in a conversation.
+
+**GLAN:** The Global-Local Attention Network combines global and local conversational information to understand stance.
+
+**ZS-CSD:** This introduces a Chinese benchmark for zero-shot conversational stance detection, where models are evaluated on unseen targets.
+
+**SITPCL:** This approach combines speaker interaction with target-aware prototypical contrastive learning.
+
+These works demonstrate that understanding a conversation requires more than analysing individual sentences.
+
+The current paper uses both individual-text and conversational datasets to evaluate Jev.
+
+Now, let us understand how the proposed evaluation workflow operates.
+
+---
+
+### Slide 7 – Generic Workflow of Jev
+
+The overall workflow can be divided into four major stages.
+
+**Stage 1 – Task Definition**
+
+First, the system defines what needs to be predicted.
+
+In this research, the task is to identify whether a person supports, opposes, or remains neutral toward a particular target.
+
+**Stage 2 – Structured Input Construction**
+
+Next, the required information is collected and organised.
+
+This includes the target, the text to be analysed, the conversation history, and the target type.
+
+**Stage 3 – Choice-Based Decision**
+
+The structured information is provided to Jev along with predefined answer choices.
+
+Jev evaluates the input and selects the most suitable stance category.
+
+**Stage 4 – Prediction Extraction**
+
+Finally, the selected answer is extracted and treated as the model's stance prediction.
+
+So, the overall flow is:
+
+**Define the task → Construct the input → Make a decision → Extract the prediction.**
+
+Let us now look at each stage technically.
+
+---
+
+### Slide 8 – Technical Architecture
+
+This slide explains the technical structure used in the experiment.
+
+The process starts with the dataset.
+
+The dataset provides the target, focus text, and, when available, conversational information.
+
+The input construction stage converts this information into a structured request.
+
+The request is then sent to the model through a Choice-based decision instruction.
+
+The model selects one of the predefined options:
+
+- Favor
+- Against
+- Neutral
+
+The selected option is extracted, validated, and stored as the final prediction.
+
+The predicted label is then compared with the reference label from the dataset to calculate evaluation metrics.
+
+An important point is that this paper evaluates the model's decision process through the documented input and output pipeline. It does not reveal the complete internal algorithm or hidden reasoning architecture of Jev.
+
+---
+
+### Slide 9 – Stage 1: Task Definition
+
+The first technical stage is task definition.
+
+Before sending any input to the model, the researchers clearly define the classification objective.
+
+The model must determine the stance of a particular focus text toward a given target.
+
+The three possible outputs are:
+
+1. Favor
+2. Against
+3. Neutral
+
+For example:
+
+Target: Online education is beneficial.
+
+Focus text: "It allows students to learn from anywhere."
+
+The expected stance is Favor.
+
+The important point is that the model must classify the stance toward the specified target, rather than simply identify whether the sentence contains positive or negative words.
+
+This task definition ensures that all models are evaluated on the same objective.
+
+---
+
+### Slide 10 – Stage 2: Structured Input Construction
+
+The second stage is structured input construction.
+
+The researchers organise the input using four important components.
+
+**First – Target (t):**
+
+This identifies the topic, person, organisation, or claim toward which the stance must be detected.
+
+**Second – Focus Text (v):**
+
+This is the specific text whose stance needs to be classified.
+
+**Third – Conversation History (H):**
+
+This contains the previous turns in the conversation, when available.
+
+It helps the model understand the context of the current statement.
+
+**Fourth – Target Type (τ):**
+
+This identifies the type of target, such as a noun phrase or a claim.
+
+Together, these components form a structured input:
+
+x = φ(t, v, H, τ)
+
+Here, φ represents the process of organising the information into the model's input format.
+
+For individual-text datasets, conversation history and target type are empty.
+
+For conversational datasets, the previous turns and target type are included.
+
+The researchers also preserve the original language and conversation order, identify the focus turn, and remove unnecessary formatting or metadata.
+
+This structured representation helps provide consistent input to the models.
+
+---
+
+### Slide 11 – Stage 3: Choice-Based Decision
+
+The third stage is the Choice-based decision process.
+
+After constructing the input, the researchers provide it to Jev along with a clear instruction.
+
+The instruction asks the model to determine the stance of the focus text toward the given target.
+
+It also specifies that conversation history should be used only to understand the focus text.
+
+The model is given exactly three predefined choices:
+
+- Favor
+- Against
+- Neutral
+
+It must select exactly one option based on the classification criteria.
+
+For example, if the target is online education and the focus text says, "It provides flexible learning opportunities," the model should select Favor.
+
+If the focus text says, "It reduces classroom interaction," the model may select Against.
+
+If the statement does not clearly support or oppose the target, it should select Neutral.
+
+The researchers do not provide in-context examples in the Choice instruction.
+
+This helps evaluate how the model performs using the task instructions and the supplied input.
+
+---
+
+### Slide 12 – Stage 4: Prediction Extraction
+
+The fourth stage is prediction extraction.
+
+Once Jev makes its decision, the selected option identifier is extracted.
+
+This selected option is represented as π_choice in the paper.
+
+The system then validates whether the selected option belongs to the three permitted labels.
+
+If it is valid, the selected option is directly used as the final stance prediction.
+
+There is no additional confidence-based filtering or probability adjustment described in this pipeline.
+
+Each record is processed as an individual request.
+
+Finally, the predicted label is compared with the actual reference label in the dataset.
+
+This allows the researchers to calculate the model's performance.
+
+So, the complete process ends with a clear and structured stance prediction.
+
+---
+
+### Slide 13 – End-to-End Example
+
+Now, let us understand the complete workflow using one example.
+
+Consider a conversation about online education.
+
+**Target:** Online education is beneficial.
+
+**Conversation history:**
+
+Speaker 1: "Online classes make learning more flexible."
+
+Speaker 2: "But students may miss direct interaction with teachers."
+
+Speaker 3: "Even so, students can access learning materials from anywhere."
+
+Our focus text is the statement made by Speaker 3.
+
+**Step 1 – Task Definition:**
+
+The objective is to identify Speaker 3's stance toward online education.
+
+**Step 2 – Input Construction:**
+
+The system collects the target, Speaker 3's statement, the previous conversation turns, and the target type.
+
+**Step 3 – Choice-Based Decision:**
+
+The structured input is sent to Jev with the three available options: Favor, Against, and Neutral.
+
+The model evaluates the statement using the conversation context.
+
+**Step 4 – Prediction Extraction:**
+
+Suppose Jev selects Favor.
+
+The system extracts that selected option and records Favor as the final prediction.
+
+This prediction is then compared with the dataset's reference label.
+
+This example demonstrates how Jev processes conversational information rather than simply classifying an isolated sentence.
+
+---
+
+### Slide 14 – Datasets and Models Used
+
+The researchers evaluate Jev using two datasets.
+
+**First – VAST Dataset**
+
+VAST contains individual English text samples.
+
+It is used to evaluate stance detection at the individual-text level.
+
+The test set contains 3,006 records.
+
+Since it focuses on individual text, conversation history and target type are not required.
+
+**Second – ZS-CSD Dataset**
+
+ZS-CSD is a Chinese conversational stance detection dataset.
+
+It contains 2,584 test records.
+
+Unlike VAST, it includes conversation history and target-type information.
+
+It is designed to evaluate stance detection toward unseen targets in conversations.
+
+The researchers compare Jev with several models:
+
+- DeepSeek V4.1 Flash
+- Qwen3.8-Flash
+- GPT-5.6
+- Claude Sonnet 5
+
+They also include fine-tuned Qwen2.5 models with 3B and 7B parameters using LoRA.
+
+This comparison helps evaluate Jev against both general-purpose models and fine-tuned models.
+
+---
+
+### Slide 15 – Evaluation Metrics and Methodology
+
+The researchers use multiple evaluation parameters.
+
+**First – Accuracy**
+
+Accuracy measures the percentage of predictions that match the actual labels.
+
+**Second – Macro-F1 Score**
+
+Macro-F1 calculates the F1 score separately for Favor, Against, and Neutral, and then takes the average.
+
+This is important because it gives equal importance to all three classes.
+
+**Third – Token Usage**
+
+Token usage measures how much text processing the model requires.
+
+**Fourth – API Cost**
+
+API cost measures the expense associated with using the model for the experiment.
+
+The researchers also conduct five prompted runs and use 5,000 paired target-bootstrap resamples for statistical analysis.
+
+This helps evaluate the consistency of the results and the reliability of the comparisons.
+
+So, the evaluation considers not only how accurately a model predicts stance, but also its resource usage and cost.
+
+---
+
+### Slide 16 – Experimental Results
+
+Now, let us look at the main experimental results.
+
+The researchers use Macro-F1 as an important measure for comparing model performance.
+
+**On the VAST dataset:**
+
+Jev achieves a Macro-F1 score of 77.92%.
+
+GPT-5.6 achieves 78.08%.
+
+Qwen3.8-Flash achieves 73.79%.
+
+DeepSeek V4.1 Flash achieves 73.99%.
+
+Claude Sonnet 5 achieves 74.51%.
+
+This shows that Jev performs competitively on individual-text stance detection, with a score very close to GPT-5.6.
+
+**On the ZS-CSD dataset:**
+
+Jev achieves 58.43%.
+
+DeepSeek achieves 56.89%.
+
+Qwen achieves 53.16%.
+
+GPT-5.6 achieves 73.62%.
+
+Claude Sonnet 5 achieves 72.42%.
+
+Here, GPT-5.6 and Claude perform considerably better than Jev.
+
+The fine-tuned Qwen2.5 7B model also achieves 79.91% on VAST and 60.85% on ZS-CSD.
+
+Overall, the results show that Jev is competitive on individual text, but it faces greater challenges in conversational stance detection.
+
+---
+
+### Slide 17 – Why Does Jev Perform Differently?
+
+An important question is: why does Jev perform differently across the two datasets?
+
+The results suggest that individual-text stance detection is comparatively easier for Jev than conversational stance detection.
+
+In VAST, the model mainly needs to understand a single text and its target.
+
+However, in ZS-CSD, it must consider multiple speakers, previous statements, and the relationship between the conversation and the target.
+
+One important observation is the confusion between Favor and Against.
+
+On ZS-CSD, Jev makes 373 Favor–Against errors, while GPT-5.6 makes only 35 such errors.
+
+This indicates that Jev has difficulty distinguishing between support and opposition in some conversational situations.
+
+The paper also analyses different target types.
+
+For noun-phrase targets, Jev achieves 63.49%.
+
+For claim-based targets, it achieves 55.26%.
+
+This suggests that identifying stance toward a person, organisation, or product may be easier than identifying stance toward a complex claim.
+
+The researchers also analyse conversation length.
+
+The performance gap does not steadily increase as conversations become longer.
+
+This suggests that speaker interaction and the direction of the stance may matter more than the number of turns alone.
+
+Therefore, the difference in performance is related to the complexity of the task and the information needed to understand the stance.
+
+---
+
+### Slide 18 – API Cost Comparison
+
+Apart from performance, the researchers also compare API costs.
+
+On the VAST dataset, Jev costs approximately $0.0741.
+
+GPT-5.6 costs approximately $3.9010.
+
+On the ZS-CSD dataset, Jev costs approximately $0.0776.
+
+GPT-5.6 costs approximately $3.9230.
+
+Claude Sonnet 5 costs approximately $4.7051 on VAST and $5.5582 on ZS-CSD.
+
+This shows that Jev has a significantly lower API cost in the reported experiments.
+
+However, lower cost does not automatically mean better performance.
+
+The suitable model depends on the required balance between accuracy, cost, and task complexity.
+
+For tasks where Jev's accuracy is sufficient, it may offer a cost-effective option.
+
+---
+
+### Slide 19 – Potential Real-World Use Cases
+
+Based on the experimental results, we can identify four potential real-world applications.
+
+These are possible applications inferred from the benchmark results; they were not implemented or tested as real-world systems in the paper.
+
+**Use Case 1 – Individual-Text Opinion Classification**
+
+This is a more promising application.
+
+For example, a company can analyse individual customer reviews to identify whether customers support, oppose, or remain neutral toward a product.
+
+Jev achieves 77.92% Macro-F1 on VAST, making this type of application comparatively more promising.
+
+**Use Case 2 – Stance Toward Named Entities**
+
+Jev may also be useful for analysing opinions toward named entities such as people, organisations, or products within conversations.
+
+On noun-phrase targets in ZS-CSD, Jev achieves 63.49% Macro-F1.
+
+This indicates comparatively better performance than its claim-based results.
+
+**Use Case 3 – Conversational Stance Classification**
+
+This application involves identifying people's positions in multi-speaker discussions.
+
+Jev achieves 58.43% Macro-F1 on the overall ZS-CSD dataset.
+
+This suggests that conversational analysis may require additional validation before deployment.
+
+**Use Case 4 – Complex Claim-Based Stance Detection**
+
+This is a more challenging application.
+
+For example, analysing whether people support or oppose a government policy, proposal, or public statement.
+
+Jev achieves 55.26% Macro-F1 on claim-based targets.
+
+Therefore, more capable models or additional validation may be needed for this type of application.
+
+---
+
+### Slide 20 – Practical Examples Connected to the Results
+
+Let us connect these evaluation results with practical examples.
+
+**Example 1 – Smartphone Product Reviews**
+
+Imagine a smartphone company receiving thousands of online customer reviews.
+
+The company wants to understand whether customers support or oppose a particular product feature, such as battery performance.
+
+Consider these reviews:
+
+- "The battery lasts throughout the day." – Favor.
+- "The battery drains very quickly." – Against.
+- "The phone was launched last month." – Neutral.
+
+The system can classify each review into the three stance categories.
+
+Since Jev achieves 77.92% Macro-F1 on the individual-text VAST dataset, this type of application is comparatively more promising.
+
+However, the company should still validate the model on its own customer reviews before using the results for business decisions.
+
+**Example 2 – Online Education Policy Discussions**
+
+Now consider an online discussion about a new online education policy.
+
+Different speakers may express different opinions.
+
+Speaker 1: "This policy improves access to education."
+
+Speaker 2: "But it may create difficulties for students without internet access."
+
+Speaker 3: "The government should provide better digital infrastructure."
+
+The system must understand the conversation and identify each speaker's stance toward the policy.
+
+This is more challenging because the statements depend on the discussion and the target is a complete claim.
+
+Jev achieves 55.26% Macro-F1 on claim-based targets in ZS-CSD.
+
+Therefore, this type of application requires stronger models, human validation, or additional evaluation before practical deployment.
+
+These examples show how benchmark scores can help us decide where a model may be suitable and where it may struggle.
+
+---
+
+### Slide 21 – Limitations and Key Takeaways
+
+Before concluding, let us look at the limitations and key takeaways.
+
+**Limitations:**
+
+First, Jev performs less effectively on conversational stance detection compared with GPT-5.6 and Claude Sonnet 5.
+
+Second, it has difficulty distinguishing between Favor and Against in some conversational examples.
+
+Third, its performance is lower for claim-based targets than for noun-phrase targets.
+
+Fourth, the evaluation is based on two benchmark datasets, so the results should not automatically be generalised to every real-world application.
+
+**Key Takeaways:**
+
+- Jev demonstrates competitive performance on individual-text stance detection.
+- General-purpose LLMs perform better on the conversational dataset.
+- Target type and conversational context influence classification performance.
+- Jev has significantly lower API costs in the reported experiments.
+- Model selection should consider both performance and cost.
+
+The main conclusion is that there is no single model that is automatically best for every stance detection task.
+
+The right model depends on the nature of the input, the required accuracy, and the available budget.
+
+---
+
+### Slide 22 – Conclusion
+
+To conclude, this research evaluates whether decision models can understand people's opinions and positions toward different targets.
+
+Through its comparison of Jev with general-purpose LLMs, the paper demonstrates that Jev can be competitive in individual-text stance detection while facing challenges in more complex conversational tasks.
+
+It also highlights the importance of considering accuracy, target type, conversational context, and API cost when selecting a model.
+
+The key message is:
+
+**Understanding an opinion is not just about reading the words. It is about understanding the target, the context, and the speaker's actual position.**
+
+Thank you.
